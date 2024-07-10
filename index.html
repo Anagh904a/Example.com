@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <!-- MDB JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.0/mdb.min.js"></script>
+</head>
+
+<body>
+  <section class="vh-100">
+    <div class="container py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col">
+          <div class="card" id="list1" style="border-radius: .75rem; background-color: #eff1f2;">
+            <div class="card-body py-4 px-4 px-md-5">
+
+              <p class="h1 text-center mt-3 mb-4 pb-3 text-primary">
+                <i class="fas fa-check-square me-1"></i>
+                <u>My Todo-s</u>
+                <!-- App Title and Developer Name -->
+<div class="text-center mb-4">
+  <h1 class="display-4 text-primary">To-Do List</h1>
+  <h4 class="text-secondary">Developer: Anagh</h4>
+</div>
+              </p>
+
+              <div class="pb-2">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="d-flex flex-row align-items-center">
+                      <input type="text" class="form-control form-control-lg" id="taskInput"
+                        placeholder="Add new...">
+                      <a href="#!" id="setDueDate" data-mdb-tooltip-init title="Set due date"><i
+                          class="fas fa-calendar-alt fa-lg me-3"></i></a>
+                      <div>
+                        <button id="addTaskBtn" type="button" data-mdb-button-init data-mdb-ripple-init
+                          class="btn btn-primary">Add</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <div class="d-flex justify-content-end align-items-center mb-4 pt-2 pb-3">
+                <p class="small mb-0 me-2 text-muted">Filter</p>
+                <select id="filterSelect" data-mdb-select-init>
+                  <option value="all">All</option>
+                  <option value="completed">Completed</option>
+                  <option value="active">Active</option>
+                  <option value="hasDueDate">Has due date</option>
+                </select>
+                <p class="small mb-0 ms-4 me-2 text-muted">Sort</p>
+                <select id="sortSelect" data-mdb-select-init>
+                  <option value="addedDate">Added date</option>
+                  <option value="dueDate">Due date</option>
+                </select>
+                <a href="#!" id="sortDirection" style="color: #23af89;" data-mdb-tooltip-init title="Ascending"><i
+                    class="fas fa-sort-amount-down-alt ms-2"></i></a>
+              </div>
+
+              <!-- Todo list -->
+              <ul id="todoList" class="list-group list-group-flush">
+                <!-- Task items will be dynamically added here -->
+              </ul>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.slim.min.js"
+    integrity="sha512-8tFk4MxsoS9lVW/R6a+jrBI6JHeC12TZR0JB1iD5qgA3J9+8tP0Ec8h2PzEr3OS1rDdReny+3mOz/hi9HfPx/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"
+    integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhLkz20G5135dhD5c5j9uSrbEZO3O+g2jcXu6zB/+U/6" crossorigin="anonymous"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Function to add a new task to the list
+      function addTask(taskName, dueDate) {
+        var todoList = document.getElementById('todoList');
+        var newTaskItem = document.createElement('li');
+        newTaskItem.classList.add('list-group-item', 'd-flex', 'align-items-center', 'py-3', 'rounded-0', 'border-0', 'bg-transparent');
+        newTaskItem.innerHTML = `
+          <div class="form-check me-3">
+            <input class="form-check-input" type="checkbox" value="" aria-label="...">
+          </div>
+          <p class="lead mb-0 flex-grow-1">${taskName}</p>
+          <div class="ms-auto">
+            <a href="#!" class="text-info me-3 edit-task" data-mdb-tooltip-init title="Edit todo"><i class="fas fa-pencil-alt"></i></a>
+            <a href="#!" class="text-danger delete-task" data-mdb-tooltip-init title="Delete todo"><i class="fas fa-trash-alt"></i></a>
+            <a href="#!" class="text-muted ms-3 set-due-date" data-mdb-tooltip-init title="Set due date"><i class="fas fa-calendar-alt"></i></a>
+          </div>
+          <p class="small text-muted mt-1">${getCurrentDateTime()}</p>
+        `;
+        todoList.appendChild(newTaskItem);
+        // Attach event listeners to new edit, delete, and set due date buttons
+        newTaskItem.querySelector('.edit-task').addEventListener('click', editTask);
+        newTaskItem.querySelector('.delete-task').addEventListener('click', deleteTask);
+        newTaskItem.querySelector('.set-due-date').addEventListener('click', function () {
+          setDueDate(newTaskItem);
+        });
+
+        // Check if due date is reached
+        var currentDate = new Date();
+        if (dueDate <= currentDate) {
+          showNotification(taskName);
+        }
+      }
+
+      // Edit task functionality
+      function editTask(event) {
+        var taskItem = event.target.closest('.list-group-item');
+        var taskNameElement = taskItem.querySelector('.lead');
+        var currentTaskName = taskNameElement.textContent.trim();
+        var editedTaskName = prompt('Edit task:', currentTaskName);
+        if (editedTaskName !== null && editedTaskName !== '') {
+          taskNameElement.textContent = editedTaskName;
+          updateTaskTimestamp(taskItem);
+        }
+      }
+
+      // Delete task functionality
+      function deleteTask(event) {
+        var taskItem = event.target.closest('.list-group-item');
+        taskItem.remove();
+      }
+
+      // Set due date functionality
+      function setDueDate(taskItem) {
+        var dueDate = prompt('Set due date (YYYY-MM-DD):');
+        if (dueDate !== null && dueDate !== '') {
+          var currentDate = new Date();
+          var selectedDate = new Date(dueDate);
+          if (selectedDate < currentDate) {
+            alert('Invalid due date. Please select a future date.');
+            return;
+          }
+          taskItem.dataset.dueDate = dueDate;
+          updateTaskTimestamp(taskItem);
+        }
+      }
+
+      // Function to get current date and time
+      function getCurrentDateTime() {
+        var currentDate = new Date();
+        var formattedDate = currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+        return `Added: ${formattedDate}`;
+      }
+
+      // Event listener for adding a new task
+      document.getElementById('addTaskBtn').addEventListener('click', function () {
+        var taskInput = document.getElementById('taskInput');
+        var taskName = taskInput.value.trim();
+        if (taskName !== '') {
+          addTask(taskName);
+          taskInput.value = '';
+        }
+      });
+
+      // Attach event listeners to existing tasks for edit and delete functionalities
+      document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('edit-task')) {
+          editTask(event);
+        }
+        if (event.target.classList.contains('delete-task')) {
+          deleteTask(event);
+        }
+      });
+
+      // Sorting and filtering functionality (to be implemented)
+      // Handle sorting and filtering based on selected options
+      document.getElementById('filterSelect').addEventListener('change', function () {
+        var filterValue = this.value;
+        // Implement filtering logic
+        console.log('Filter by: ' + filterValue);
+      });
+
+      document.getElementById('sortSelect').addEventListener('change', function () {
+        var sortValue = this.value;
+        // Implement sorting logic
+        console.log('Sort by: ' + sortValue);
+      });
+
+      document.getElementById('sortDirection').addEventListener('click', function () {
+        // Implement sorting direction toggle
+        console.log('Toggle sorting direction');
+      });
+
+      // Function to update task timestamp
+      function updateTaskTimestamp(taskItem) {
+        taskItem.querySelector('.small.text-muted').textContent = getCurrentDateTime();
+      }
+
+      // Function to show notification when due date is reached
+      function showNotification(taskName) {
+        if ('Notification' in window) {
+          Notification.requestPermission(function (permission) {
+            if (permission === 'granted') {
+              var notification = new Notification('Task Due!', { body: taskName });
+              setTimeout(notification.close.bind(notification), 5000);
+            }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
+
+
